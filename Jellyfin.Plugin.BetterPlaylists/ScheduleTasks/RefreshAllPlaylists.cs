@@ -13,11 +13,12 @@ using Microsoft.Extensions.Logging;
 using MediaBrowser.Controller.Playlists;
 using MediaBrowser.Model.Playlists;
 using Jellyfin.Data.Entities;
+using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.IO;
 
 
-namespace Jellyfin.Plugin.SmartPlaylist.ScheduleTasks
+namespace Jellyfin.Plugin.BetterPlaylists.ScheduleTasks
 {
     public class RefreshAllPlaylists : IScheduledTask, IConfigurableScheduledTask
     {
@@ -31,7 +32,7 @@ namespace Jellyfin.Plugin.SmartPlaylist.ScheduleTasks
         private readonly IUserManager _userManager;
         public RefreshAllPlaylists(
             IFileSystem fileSystem,
-            IJsonSerializer jsonSerializer,
+            IXmlSerializer jsonSerializer,
             ILibraryManager libraryManager,
             ILogger<Plugin> logger,
             IPlaylistManager playlistManager,
@@ -52,8 +53,6 @@ namespace Jellyfin.Plugin.SmartPlaylist.ScheduleTasks
            
             _logger.LogInformation("Constructed Refresher ");
         }
-        public static readonly Type[] SupportedItemTypes = { typeof(Audio), typeof(MediaBrowser.Controller.Entities.Movies.Movie), typeof(MediaBrowser.Controller.Entities.TV.Episode) };
-        public static readonly string[] SupportedItemTypeNames = SupportedItemTypes.Select(x => x.Name).ToArray();
         public bool IsHidden => false;
         public bool IsEnabled => true;
         public bool IsLogged => true;
@@ -72,7 +71,6 @@ namespace Jellyfin.Plugin.SmartPlaylist.ScheduleTasks
                 {
                     IntervalTicks = TimeSpan.FromMinutes(30).Ticks,
                     Type = TaskTriggerInfo.TriggerInterval,
-
                 }
             };
         }
@@ -82,7 +80,7 @@ namespace Jellyfin.Plugin.SmartPlaylist.ScheduleTasks
             var req = new PlaylistCreationRequest
             {
                 Name = dto.Name,
-                UserId = user.Id,
+                UserId = user.Id
 
             };
             var foo = _playlistManager.CreatePlaylist(req);
@@ -94,22 +92,22 @@ namespace Jellyfin.Plugin.SmartPlaylist.ScheduleTasks
         {
             var query = new InternalItemsQuery(user)
             {
-                IncludeItemTypes = SupportedItemTypeNames,
-                Recursive = true,
+                IncludeItemTypes = new [] { BaseItemKind.Audio },
+                Recursive = true
             };
             
-            return (IEnumerable<BaseItem>)_libraryManager.GetItemsResult(query).Items;
+            return _libraryManager.GetItemsResult(query).Items;
         }
 
-        public Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
+        public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
             var dtos = _plStore.GetAllSmartPlaylistsAsync();
             dtos.Wait();
             foreach (var dto in dtos.Result)
             {
-                SmartPlaylist smart_playlist = new SmartPlaylist(dto);
+                SmartPlaylist smartPlaylist = new SmartPlaylist(dto);
 
-                var user = _userManager.GetUserByName(smart_playlist.User);
+                var user = _userManager.GetUserByName(smartPlaylist.User);
                 List<Playlist> p;
                 try
                 {
@@ -133,19 +131,19 @@ namespace Jellyfin.Plugin.SmartPlaylist.ScheduleTasks
                     p = playlists.Where(x => x.Id.ToString().Replace("-", "") == dto.Id).ToList();
                 }
 
-                var new_items = smart_playlist.FilterPlaylistItems(GetAllUserMedia(user), _libraryManager, user);
+                var newItems = smartPlaylist.FilterPlaylistItems(GetAllUserMedia(user), _libraryManager, user);
 
                 var playlist = p.First();
                 var query = new InternalItemsQuery(user)
                 {
-                    IncludeItemTypes = SupportedItemTypeNames,
-                    Recursive = true,
+                    IncludeItemTypes = new [] { BaseItemKind.Audio },
+                    Recursive = true
                 };
                 var plitems = playlist.GetChildren(user, false, query).ToList();
 
                 var toremove = plitems.Select(x => x.Id.ToString()).ToList();
                 RemoveFromPlaylist(playlist.Id.ToString(), toremove);
-                _playlistManager.AddToPlaylistAsync(playlist.Id, new_items.ToArray(), user.Id);
+                _playlistManager.AddToPlaylistAsync(playlist.Id, newItems.ToArray(), user.Id);
             }
             return Task.CompletedTask;
         }

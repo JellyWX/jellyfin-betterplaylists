@@ -5,7 +5,7 @@ using Jellyfin.Data.Entities;
 using System.Linq;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.SmartPlaylist.QueryEngine
+namespace Jellyfin.Plugin.BetterPlaylists.QueryEngine
 {
     class OperandFactory
     {

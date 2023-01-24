@@ -6,7 +6,7 @@ using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 
 
-namespace Jellyfin.Plugin.SmartPlaylist
+namespace Jellyfin.Plugin.BetterPlaylists
 {
     public class Plugin : BasePlugin<BasePluginConfiguration>, IHasWebPages
     {

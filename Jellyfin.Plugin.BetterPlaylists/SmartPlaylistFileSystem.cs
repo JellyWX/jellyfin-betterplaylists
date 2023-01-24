@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using MediaBrowser.Controller;
 
-namespace Jellyfin.Plugin.SmartPlaylist
+namespace Jellyfin.Plugin.BetterPlaylists
 {
     public interface ISmartPlaylistFileSystem
     {

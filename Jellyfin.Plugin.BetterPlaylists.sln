@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29920.165
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jellyfin.Plugin.SmartPlaylist", "Jellyfin.Plugin.SmartPlaylist\Jellyfin.Plugin.SmartPlaylist.csproj", "{EFE3257F-C3D6-4D49-AF40-486CBABAF49C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{C240ECDA-10A6-42DE-A374-F89EC473498F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jellyfin.Plugin.BetterPlaylists", "Jellyfin.Plugin.BetterPlaylists\Jellyfin.Plugin.BetterPlaylists.csproj", "{EFE3257F-C3D6-4D49-AF40-486CBABAF49C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Jellyfin.Plugin.SmartPlaylist.QueryEngine
+namespace Jellyfin.Plugin.BetterPlaylists.QueryEngine
 {
     public class Operand
     {

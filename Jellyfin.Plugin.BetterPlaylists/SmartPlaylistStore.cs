@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Serialization;
 
-namespace Jellyfin.Plugin.SmartPlaylist
+namespace Jellyfin.Plugin.BetterPlaylists
 {
     public interface ISmartPlaylistStore
     {
@@ -18,11 +18,11 @@ namespace Jellyfin.Plugin.SmartPlaylist
     public class SmartPlaylistStore : ISmartPlaylistStore
     {
         private readonly ISmartPlaylistFileSystem _fileSystem;
-        private readonly IJsonSerializer _jsonSerializer;
+        private readonly IXmlSerializer _serializer;
 
-        public SmartPlaylistStore(IJsonSerializer jsonSerializer, ISmartPlaylistFileSystem fileSystem)
+        public SmartPlaylistStore(IXmlSerializer serializer, ISmartPlaylistFileSystem fileSystem)
         {
-            _jsonSerializer = jsonSerializer;
+            _serializer = serializer;
             _fileSystem = fileSystem;
         }
 
@@ -55,7 +55,7 @@ namespace Jellyfin.Plugin.SmartPlaylist
         public void Save(SmartPlaylistDto smartPlaylist)
         {
             var filePath = _fileSystem.GetSmartPlaylistPath(smartPlaylist.Id, smartPlaylist.FileName);
-            _jsonSerializer.SerializeToFile(smartPlaylist, filePath);
+            _serializer.SerializeToFile(smartPlaylist, filePath);
         }
 
         public void Delete(Guid userId, string smartPlaylistId)
@@ -69,9 +69,7 @@ namespace Jellyfin.Plugin.SmartPlaylist
             using (var reader = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None, 4096,
                 FileOptions.Asynchronous))
             {
-                var res = await _jsonSerializer.DeserializeFromStreamAsync<SmartPlaylistDto>(reader)
-                    .ConfigureAwait(false);
-                reader.Close();
+                var res = (SmartPlaylistDto)_serializer.DeserializeFromStream(typeof(SmartPlaylistDto), reader);
                 return res;
             }
         }
