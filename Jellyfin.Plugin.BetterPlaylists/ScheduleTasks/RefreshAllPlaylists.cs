@@ -61,7 +61,6 @@ namespace Jellyfin.Plugin.BetterPlaylists.ScheduleTasks
         public string Description => "Refresh all SmartPlaylists";
         public string Category => "Library";
 
-
         // TODO check for creation of schedule json file. Isn't created currently and won't execute until it is.
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
@@ -81,11 +80,10 @@ namespace Jellyfin.Plugin.BetterPlaylists.ScheduleTasks
             {
                 Name = dto.Name,
                 UserId = user.Id
-
             };
+            
             var foo = _playlistManager.CreatePlaylist(req);
             return foo.Result.Id;
-
         }
 
         private IEnumerable<BaseItem> GetAllUserMedia(User user)
@@ -119,7 +117,6 @@ namespace Jellyfin.Plugin.BetterPlaylists.ScheduleTasks
                     _logger.LogError(ex, "No user named {0} found, please fix playlist {1}", dto.User, dto.Name);
                     continue;
                 }
-
 
                 if (dto.Id == null | p.Count() == 0)
                 {

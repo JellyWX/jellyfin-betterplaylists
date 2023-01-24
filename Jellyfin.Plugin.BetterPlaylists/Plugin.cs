@@ -19,11 +19,11 @@ namespace Jellyfin.Plugin.BetterPlaylists
         }
 
 
-        public override Guid Id => Guid.Parse("3C96F5BC-4182-4B86-B05D-F730F2611E45");
+        public override Guid Id => Guid.Parse("05E83046-1C9B-4749-8CCF-55FA6B174045");
 
-        public override string Name => "SmartPlaylist";
+        public override string Name => "BetterPlaylists";
 
-        public override string Description => "Allow to define smart playlist rules.";
+        public override string Description => "Persist playlists between filesystem restructures.";
 
         public static Plugin Instance { get; private set; }
 
@@ -35,7 +35,6 @@ namespace Jellyfin.Plugin.BetterPlaylists
                 {
                     //Name = "smartplaylist.html",
                     //EmbeddedResourcePath = string.Format("{0}.Configuration.smartplaylist.html", GetType().Namespace),
-                    
                 }
             };
         }
