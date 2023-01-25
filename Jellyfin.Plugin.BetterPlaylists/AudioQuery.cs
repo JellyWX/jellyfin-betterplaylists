@@ -9,10 +9,10 @@ using MediaBrowser.Controller.Providers;
 namespace Jellyfin.Plugin.BetterPlaylists;
 
 [Serializable]
-public class AudioQuery 
+public class AudioQuery
 {
     public string MusicbrainzId;
-    // public string SongName;
+    public string SongName;
     // public string AlbumName;
     // public string ArtistName;
 
@@ -20,18 +20,18 @@ public class AudioQuery
     {
         var query = new InternalItemsQuery
         {
-            MediaTypes = new [] { nameof(Audio) }
+            MediaTypes = new[] { nameof(Audio) }
         };
-        
+
         var guids = libraryManager.GetItemIds(query);
 
         var matches = guids
             .Where(guid => providerManager
-                .GetExternalIdInfos(libraryManager.GetItemById(guid))
-                .First(info => info.Name == "Musicbrainz")
-                .Key == MusicbrainzId
-                );
+                    .GetExternalIdInfos(libraryManager.GetItemById(guid))
+                    .First(info => info.Name == "Musicbrainz")
+                    .Key == MusicbrainzId
+            );
 
         return matches;
-    } 
+    }
 }
