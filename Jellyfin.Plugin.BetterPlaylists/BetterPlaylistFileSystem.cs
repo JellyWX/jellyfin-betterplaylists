@@ -23,6 +23,6 @@ public class BetterPlaylistFileSystem : IBetterPlaylistFileSystem
 
     public string GetBetterPlaylistFilePath(string playlistName)
     {
-        return Directory.GetFiles(BasePath, $"{playlistName}.json", SearchOption.AllDirectories).First();
+        return Directory.GetFiles(BasePath, $"{playlistName}.json", SearchOption.AllDirectories).FirstOrDefault();
     }
 }

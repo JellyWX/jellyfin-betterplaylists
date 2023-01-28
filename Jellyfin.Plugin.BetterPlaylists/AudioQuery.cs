@@ -11,26 +11,32 @@ namespace Jellyfin.Plugin.BetterPlaylists;
 [Serializable]
 public class AudioQuery
 {
-    public string MusicbrainzId;
-    public string SongName;
-    // public string AlbumName;
-    // public string ArtistName;
+    public string MusicbrainzId { get; set; }
+    public string SongName { get; set; }
+    public string AlbumName { get; set; }
 
-    public IEnumerable<Guid> Resolve(ILibraryManager libraryManager, IProviderManager providerManager)
+    public BaseItem Resolve(ILibraryManager libraryManager, IProviderManager providerManager)
     {
         var query = new InternalItemsQuery
         {
             MediaTypes = new[] { nameof(Audio) }
         };
 
-        var guids = libraryManager.GetItemIds(query);
+        var items = libraryManager.GetItemList(query);
 
-        var matches = guids
-            .Where(guid => providerManager
-                    .GetExternalIdInfos(libraryManager.GetItemById(guid))
-                    .First(info => info.Name == "Musicbrainz")
-                    .Key == MusicbrainzId
-            );
+        BaseItem matches; 
+        if (MusicbrainzId != null)
+        {
+            matches = items.First(item => providerManager
+                .GetExternalIdInfos(item)
+                .First(info => info.Name == "Musicbrainz")
+                .Key == MusicbrainzId);
+        }
+        else
+        {
+            matches = items.First(item => string.Equals(item.Album, AlbumName, StringComparison.CurrentCultureIgnoreCase) 
+                                          && string.Equals(item.Name, SongName, StringComparison.CurrentCultureIgnoreCase));
+        }
 
         return matches;
     }
