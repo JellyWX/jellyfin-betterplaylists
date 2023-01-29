@@ -62,14 +62,16 @@ public class RestructurePlaylist : ILibraryPostScanTask
 
                     var playlistItems = playlist.GetManageableItems().ToArray().Select(item => item.Item2.Id).ToList();
                     
-                    _logger.Log(LogLevel.Debug, $"Current playlist contents: {string.Join(", ", playlistItems)}");
+                    _logger.Log(LogLevel.Information, $"Current playlist contents: {string.Join(", ", playlistItems)}");
                     var resolvedItems = betterPlaylist.Queries
-                        .Select(audioQuery => audioQuery.Resolve(_libraryManager, _providerManager).Id)
+                        .Select(audioQuery => audioQuery.Resolve(_logger, _libraryManager, _providerManager))
+                        .Where(q => q != null)
+                        .Select(q => q.Id)
                         .Where(item => !playlistItems.Contains(item))
                         .ToList();
 
-                    _logger.Log(LogLevel.Debug, $"To add: {string.Join(", ", resolvedItems)}");
-                    _logger.Log(LogLevel.Debug, $"Adding {resolvedItems.Count} items to {playlist.Name}");
+                    _logger.Log(LogLevel.Information, $"To add: {string.Join(", ", resolvedItems)}");
+                    _logger.Log(LogLevel.Information, $"Adding {resolvedItems.Count} items to {playlist.Name}");
                     
                     await _playlistManager.AddToPlaylistAsync(playlist.Id, resolvedItems, user.Id);
                 }
