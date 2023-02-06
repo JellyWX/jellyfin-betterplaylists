@@ -1,12 +1,11 @@
-﻿using System;
+﻿namespace Jellyfin.Plugin.BetterPlaylists;
+
+using System;
 using System.Collections.Generic;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-
-
-namespace Jellyfin.Plugin.BetterPlaylists;
 
 public class Plugin : BasePlugin<BasePluginConfiguration>, IHasWebPages
 {

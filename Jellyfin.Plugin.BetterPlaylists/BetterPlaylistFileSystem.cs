@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using MediaBrowser.Controller;
 
@@ -7,7 +6,6 @@ namespace Jellyfin.Plugin.BetterPlaylists;
 
 public interface IBetterPlaylistFileSystem
 {
-    string BasePath { get; }
     string GetBetterPlaylistFilePath(string playlistName);
 }
 
@@ -23,6 +21,6 @@ public class BetterPlaylistFileSystem : IBetterPlaylistFileSystem
 
     public string GetBetterPlaylistFilePath(string playlistName)
     {
-        return Directory.GetFiles(BasePath, $"{playlistName}.json", SearchOption.AllDirectories).FirstOrDefault();
+        return Directory.GetFiles(BasePath, $"{playlistName}.json", SearchOption.TopDirectoryOnly).FirstOrDefault();
     }
 }

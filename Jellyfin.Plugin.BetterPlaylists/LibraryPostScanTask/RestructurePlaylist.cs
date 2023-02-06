@@ -5,8 +5,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller;
-using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Playlists;
 using MediaBrowser.Controller.Providers;
@@ -24,10 +22,10 @@ public class RestructurePlaylist : ILibraryPostScanTask
     private readonly IBetterPlaylistFileSystem _betterPlaylistFileSystem;
 
     public RestructurePlaylist(
-        ILibraryManager libraryManager, 
-        IPlaylistManager playlistManager, 
-        IUserManager userManager, 
-        IProviderManager providerManager, 
+        ILibraryManager libraryManager,
+        IPlaylistManager playlistManager,
+        IUserManager userManager,
+        IProviderManager providerManager,
         ILogger<Plugin> logger,
         IServerApplicationPaths serverApplicationPaths)
     {
@@ -51,30 +49,32 @@ public class RestructurePlaylist : ILibraryPostScanTask
             {
                 var filePath = _betterPlaylistFileSystem.GetBetterPlaylistFilePath(playlist.FileNameWithoutExtension);
 
-                if (filePath != null)
-                {
-                    await using var reader = File.OpenRead(filePath);
-                    var betterPlaylist = await JsonSerializer.DeserializeAsync<BetterPlaylist>(
-                        reader, 
-                        new JsonSerializerOptions(), 
-                        cancellationToken).ConfigureAwait(false);
-                    reader.Close();
+                if (filePath == null) continue;
 
-                    var playlistItems = playlist.GetManageableItems().ToArray().Select(item => item.Item2.Id).ToList();
-                    
-                    _logger.Log(LogLevel.Information, $"Current playlist contents: {string.Join(", ", playlistItems)}");
-                    var resolvedItems = betterPlaylist.Queries
-                        .Select(audioQuery => audioQuery.Resolve(_logger, _libraryManager, _providerManager))
-                        .Where(q => q != null)
-                        .Select(q => q.Id)
-                        .Where(item => !playlistItems.Contains(item))
-                        .ToList();
+                await using var reader = File.OpenRead(filePath);
+                var betterPlaylist = await JsonSerializer.DeserializeAsync<BetterPlaylist>(
+                    reader,
+                    new JsonSerializerOptions(),
+                    cancellationToken).ConfigureAwait(false);
+                reader.Close();
 
-                    _logger.Log(LogLevel.Information, $"To add: {string.Join(", ", resolvedItems)}");
-                    _logger.Log(LogLevel.Information, $"Adding {resolvedItems.Count} items to {playlist.Name}");
-                    
-                    await _playlistManager.AddToPlaylistAsync(playlist.Id, resolvedItems, user.Id);
-                }
+                // Skip any playlist files tagged as different playlist types.
+                if (betterPlaylist.Type != "querylist") continue;
+
+                var playlistItems = playlist.GetManageableItems().ToArray().Select(item => item.Item2.Id).ToList();
+
+                _logger.Log(LogLevel.Information, $"Current playlist contents: {string.Join(", ", playlistItems)}");
+                var resolvedItems = betterPlaylist.Queries
+                    .Select(audioQuery => audioQuery.Resolve(_logger, _libraryManager, _providerManager))
+                    .Where(q => q != null)
+                    .Select(q => q.Id)
+                    .Where(item => !playlistItems.Contains(item))
+                    .ToList();
+
+                _logger.Log(LogLevel.Information, $"To add: {string.Join(", ", resolvedItems)}");
+                _logger.Log(LogLevel.Information, $"Adding {resolvedItems.Count} items to {playlist.Name}");
+
+                await _playlistManager.AddToPlaylistAsync(playlist.Id, resolvedItems, user.Id);
             }
         }
     }

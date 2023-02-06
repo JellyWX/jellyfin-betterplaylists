@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace Jellyfin.Plugin.BetterPlaylists;
 
-namespace Jellyfin.Plugin.BetterPlaylists;
+using System;
+using System.Collections.Generic;
 
 [Serializable]
 public class BetterPlaylist
 {
-    public string Name { get; set; }
+    public string Type { get; set; }
     public List<AudioQuery> Queries { get; set; }
 }
