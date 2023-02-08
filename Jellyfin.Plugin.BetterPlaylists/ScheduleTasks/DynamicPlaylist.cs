@@ -8,10 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.BetterPlaylists.LastFm;
 using MediaBrowser.Controller;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Playlists;
 using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -26,9 +26,10 @@ public class DynamicPlaylist : IScheduledTask, IConfigurableScheduledTask
     private readonly IUserManager _userManager;
     private readonly IBetterPlaylistFileSystem _betterPlaylistFileSystem;
     private readonly LastFmApi _lastFm;
+    private readonly HttpClient _httpClient;
+    private readonly Config _config;
 
     public DynamicPlaylist(
-        IFileSystem fileSystem,
         ILibraryManager libraryManager,
         ILogger<Plugin> logger,
         IPlaylistManager playlistManager,
@@ -42,9 +43,11 @@ public class DynamicPlaylist : IScheduledTask, IConfigurableScheduledTask
         _playlistManager = playlistManager;
         _providerManager = providerManager;
         _userManager = userManager;
+        _httpClient = httpClientFactory.CreateClient();
 
         _betterPlaylistFileSystem = new BetterPlaylistFileSystem(serverApplicationPaths);
-        _lastFm = new LastFmApi(httpClientFactory, logger);
+        _config = Config.Init(_betterPlaylistFileSystem);
+        _lastFm = new LastFmApi(httpClientFactory, logger, _config);
     }
 
     public bool IsHidden => false;
@@ -77,14 +80,14 @@ public class DynamicPlaylist : IScheduledTask, IConfigurableScheduledTask
                 // Skip any playlist files tagged as different playlist types.
                 if (betterPlaylist.Type != "dynamic") continue;
 
-                var playlistItems = playlist.GetManageableItems().ToArray().Select(item => item.Item2.Id).ToList();
-
-                _logger.Log(LogLevel.Information, $"Current playlist contents: {string.Join(", ", playlistItems)}");
+                // Empty playlist
+                playlist.LinkedChildren = Array.Empty<LinkedChild>();
+                await playlist.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None);
 
                 // Fetch item details from LastFM
                 var audioQueries = await _lastFm.GetTopTracks("jude-s", cancellationToken);
 
-                var resolvedItems = audioQueries.AudioQueries(_logger)
+                var resolvedItems = audioQueries.AudioQueries()
                     .Select(audioQuery => audioQuery.Resolve(_logger, _libraryManager, _providerManager))
                     .Where(q => q != null)
                     .Select(q => q.Id)
@@ -92,8 +95,6 @@ public class DynamicPlaylist : IScheduledTask, IConfigurableScheduledTask
 
                 _logger.Log(LogLevel.Information, $"Adding {resolvedItems.Count} items to {playlist.Name}");
 
-                await _playlistManager.RemoveFromPlaylistAsync(playlist.Id.ToString(),
-                    playlistItems.Select(i => i.ToString()));
                 await _playlistManager.AddToPlaylistAsync(playlist.Id, resolvedItems, user.Id);
             }
         }

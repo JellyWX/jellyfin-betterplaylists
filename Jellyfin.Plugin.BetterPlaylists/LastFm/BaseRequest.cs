@@ -6,11 +6,7 @@ public class BaseRequest
 {
     public string ApiKey { get; set; }
     public string Method { get; set; }
-
-    /// <summary>
-    /// If the request is a secure request (Over HTTPS)
-    /// </summary>
-    public bool Secure { get; set; }
+    public string Base { get; set; }
 
     public virtual Dictionary<string, string> ToDictionary()
     {
@@ -20,10 +16,4 @@ public class BaseRequest
             { "method", Method }
         };
     }
-}
-
-public interface IPagedRequest
-{
-    int Limit { get; set; }
-    int Page { get; set; }
 }

@@ -68,8 +68,3 @@ songs match the song name.
 The plugin will perform song name matches case insensitively, and also removes all 
 apostrophes during comparison (as often outputs contain inconsistent use of the 
 different unicode apostrophes).
-
-## With thanks
-
-* Used ankenyr's https://github.com/ankenyr/jellyfin-smartplaylist-plugin as a base.
-* Used jesseward's https://github.com/jesseward/jellyfin-plugin-lastfm for Last.FM API.
