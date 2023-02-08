@@ -4,6 +4,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.BetterPlaylists;
@@ -18,7 +19,7 @@ public class AudioQuery
 
     public BaseItem Resolve(ILogger logger, ILibraryManager libraryManager, IProviderManager providerManager)
     {
-        logger.Log(LogLevel.Debug,
+        logger.Log(LogLevel.Information,
             $"Resolving: {SongName} by {ArtistName} from {AlbumName} with MBID {MusicbrainzId}");
 
         var query = new InternalItemsQuery
@@ -28,15 +29,22 @@ public class AudioQuery
 
         var items = libraryManager.GetItemList(query);
 
-        BaseItem matches;
+        BaseItem matches = null;
         if (MusicbrainzId != null)
-        {
-            matches = items.FirstOrDefault(item => providerManager
-                .GetExternalIdInfos(item)
-                .First(info => info.Name == "Musicbrainz")
-                .Key == MusicbrainzId);
-        }
-        else
+            matches = items.FirstOrDefault(item =>
+            {
+                var metadata = providerManager
+                    .GetExternalIdInfos(item)
+                    .FirstOrDefault(info => info.Name == "MusicBrainz" &&
+                                            info.Type == ExternalIdMediaType.Track);
+
+                if (metadata != null)
+                    return metadata.Key == MusicbrainzId;
+                else
+                    return false;
+            });
+
+        if (matches == null)
         {
             var filter = items.Where(item => string.Equals(
                 item.Name.Replace("’", "").Replace("'", ""),

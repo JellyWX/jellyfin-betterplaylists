@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities.Audio;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.BetterPlaylists.LastFm;
@@ -27,8 +29,11 @@ public class LastFmApi : BaseLastFmApiClient
             ApiKey = Strings.Keys.LastfmApiKey,
             Method = Strings.Methods.GetTopTracks,
             Limit = 30,
-            Secure = true
+            Secure = true,
+            Page = 1
         };
+
+        _logger.LogInformation("Here");
 
         return await Get<GetTopTracksRequest, GetTopTracksResponse>(request, cancellationToken);
     }
@@ -53,46 +58,42 @@ public class GetTopTracksRequest : BaseRequest, IPagedRequest
     }
 }
 
-[DataContract]
 public class GetTopTracksResponse : BaseResponse
 {
-    [DataMember(Name = "tracks")] public GetTracksTracks Tracks { get; set; }
+    [JsonPropertyName("toptracks")] public GetTopTracksTracks TopTracks { get; set; }
+
+    public IEnumerable<AudioQuery> AudioQueries(ILogger logger)
+    {
+        logger.LogInformation("Here 2");
+        logger.LogInformation($"TopTracks: {TopTracks}");
+        return TopTracks.Tracks.Select(track =>
+        {
+            logger.LogInformation($"Resolving {track.Name}");
+            return new AudioQuery
+                { MusicbrainzId = track.MusicBrainzId, SongName = track.Name, ArtistName = track.Artist.Name };
+        }).ToList();
+    }
 }
 
-[DataContract]
-public class GetTracksTracks
+public class GetTopTracksTracks
 {
-    [DataMember(Name = "track")] public List<LastfmTrack> Tracks { get; set; }
-
-    [DataMember(Name = "@attr")] public GetTracksMeta Metadata { get; set; }
+    [JsonPropertyName("track")] public List<LastfmTrack> Tracks { get; set; }
 }
 
-[DataContract]
-public class GetTracksMeta
-{
-    [DataMember(Name = "totalPages")] public int TotalPages { get; set; }
-
-    [DataMember(Name = "total")] public int TotalTracks { get; set; }
-
-    [DataMember(Name = "page")] public int Page { get; set; }
-}
-
-[DataContract]
 public class LastfmArtist
 {
-    [DataMember(Name = "name")] public string Name { get; set; }
+    [JsonPropertyName("name")] public string Name { get; set; }
 
-    [DataMember(Name = "mbid")] public string MusicBrainzId { get; set; }
+    [JsonPropertyName("mbid")] public string MusicBrainzId { get; set; }
 }
 
-[DataContract]
 public class LastfmTrack
 {
-    [DataMember(Name = "artist")] public LastfmArtist Artist { get; set; }
+    [JsonPropertyName("artist")] public LastfmArtist Artist { get; set; }
 
-    [DataMember(Name = "name")] public string Name { get; set; }
+    [JsonPropertyName("name")] public string Name { get; set; }
 
-    [DataMember(Name = "mbid")] public string MusicBrainzId { get; set; }
+    [JsonPropertyName("mbid")] public string MusicBrainzId { get; set; }
 
-    [DataMember(Name = "playcount")] public int PlayCount { get; set; }
+    [JsonPropertyName("playcount")] public int PlayCount { get; set; }
 }

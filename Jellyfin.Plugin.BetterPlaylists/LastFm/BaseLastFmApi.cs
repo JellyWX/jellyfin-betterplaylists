@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,27 +34,14 @@ public class BaseLastFmApiClient
     public async Task<TResponse> Get<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
         where TRequest : BaseRequest where TResponse : BaseResponse
     {
-        using var response =
-            await _httpClient.GetAsync(BuildGetUrl(request.ToDictionary(), request.Secure), cancellationToken);
-        using (var stream = await response.Content.ReadAsStreamAsync())
-        {
-            try
-            {
-                var result = await JsonSerializer.DeserializeAsync<TResponse>(stream);
+        var response =
+            await _httpClient.GetFromJsonAsync<TResponse>(BuildGetUrl(request.ToDictionary(), request.Secure),
+                cancellationToken);
 
-                // Lets Log the error here to ensure all errors are logged
-                if (result.IsError())
-                    _logger.LogError(result.Message);
+        if (response.IsError())
+            _logger.LogError($"Could not GET LastFM: {response.Message}");
 
-                return result;
-            }
-            catch (Exception e)
-            {
-                _logger.LogDebug(e.Message);
-            }
-
-            return null;
-        }
+        return response;
     }
 
     #region Private methods
