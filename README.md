@@ -11,6 +11,10 @@ or construct playlists from data extracted from external providers such as Last.
 BetterPlaylists also adds support for automatically generating *some* dynamic playlists 
 from Last.FM, such as an "On Repeat" playlist.
 
+## Configuring Last.FM
+
+Create a file `config.json` in /data/betterplaylists/config/` and add appropriate keys.
+
 ## Example use case
 
 Here is an example use case for converting a Last.FM playlist into a Jellyfin playlist.
@@ -50,7 +54,7 @@ For example, my (prettified) output is:
         ]
     }
 
-4. Copy the output to a file `/data/betterplaylists/Top 100.json`, where the name of the file is the same as the file name of the playlist.
+4. Copy the output to a file `/data/betterplaylists/playlists/Top 100.json`, where the name of the file is the same as the file name of the playlist.
 5. Run "Scan All Media" and BetterPlaylists will populate the playlist for you.
 
 ## Available queries
